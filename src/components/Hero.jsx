@@ -1,7 +1,10 @@
 import { motion } from 'framer-motion'
+import { useNavigate } from 'react-router-dom'
 import { ArrowRight } from 'lucide-react'
 
 const Hero = () => {
+  const navigate = useNavigate()
+
   return (
     <section className="relative min-h-screen flex flex-col items-center justify-center px-6 pt-32 pb-20">
       <motion.div
@@ -37,8 +40,9 @@ const Hero = () => {
           className="pt-4"
         >
           <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            onClick={() => navigate('/upload')}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             className="group relative glass rounded-full px-8 py-4 text-base font-medium tracking-tight flex items-center gap-3 mx-auto transition-colors hover:bg-white/10 animate-breathe"
           >
             <span className="relative z-10">Begin Analysis</span>
