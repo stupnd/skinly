@@ -158,7 +158,7 @@ const UploadPage = () => {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
-              className="relative glass rounded-3xl p-8 overflow-hidden"
+              className="relative glass rounded-3xl p-8 overflow-hidden group"
             >
               <div className="relative aspect-[4/3] rounded-2xl overflow-hidden bg-white/5">
                 <img
@@ -168,14 +168,12 @@ const UploadPage = () => {
                 />
                 
                 {/* Remove Button - appears on hover */}
-                <motion.button
-                  initial={{ opacity: 0 }}
-                  whileHover={{ opacity: 1 }}
+                <button
                   onClick={handleRemoveImage}
-                  className="absolute top-4 right-4 glass rounded-full p-3 hover:bg-white/10 transition-colors group"
+                  className="absolute top-4 right-4 glass rounded-full p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-white/10"
                 >
-                  <X size={20} strokeWidth={1} className="text-white/80 group-hover:text-white transition-colors" />
-                </motion.button>
+                  <X size={20} strokeWidth={1} className="text-white/80 hover:text-white transition-colors" />
+                </button>
               </div>
             </motion.div>
           )}
@@ -204,11 +202,20 @@ const UploadPage = () => {
               >
                 {isProcessing ? (
                   <>
-                    <Loader 
-                      size={20} 
-                      strokeWidth={1} 
-                      className="animate-spin text-purple-400" 
-                    />
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: "linear"
+                      }}
+                    >
+                      <Loader 
+                        size={20} 
+                        strokeWidth={1} 
+                        className="text-purple-400" 
+                      />
+                    </motion.div>
                     <span>Processing...</span>
                   </>
                 ) : (
