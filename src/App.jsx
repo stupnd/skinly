@@ -6,6 +6,7 @@ import Hero from './components/Hero'
 import Process from './components/Process'
 import UploadPage from './pages/UploadPage'
 import ResultsPage from './pages/ResultsPage'
+import VanityPage from './pages/VanityPage'
 
 function LandingPage() {
   return (
@@ -31,6 +32,7 @@ function App() {
             <Route path="/" element={<LandingPage />} />
             <Route path="/upload" element={<UploadPage />} />
             <Route path="/results" element={<ResultsPage />} />
+            <Route path="/vanity" element={<VanityPage />} />
           </Routes>
         </motion.main>
       </div>

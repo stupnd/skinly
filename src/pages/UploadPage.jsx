@@ -56,16 +56,52 @@ const UploadPage = () => {
     }
   }
 
+  const convertToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.readAsDataURL(file)
+      reader.onload = () => resolve(reader.result)
+      reader.onerror = (error) => reject(error)
+    })
+  }
+
   const handleAnalyze = async () => {
     if (!image) return
     
     setIsProcessing(true)
     
-    // Simulate processing delay
-    setTimeout(() => {
+    try {
+      // Convert image to base64
+      const base64Image = await convertToBase64(image)
+      
+      // Send to API (using proxy in dev or direct URL)
+      const apiUrl = import.meta.env.VITE_API_URL || '/api'
+      const response = await fetch(`${apiUrl}/analyze-skin`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ image: base64Image }),
+      })
+      
+      if (!response.ok) {
+        throw new Error('Failed to analyze skin')
+      }
+      
+      const analysisData = await response.json()
+      
+      // Navigate to results with analysis data and preview
+      navigate('/results', {
+        state: {
+          analysis: analysisData,
+          preview: preview
+        }
+      })
+    } catch (error) {
+      console.error('Error analyzing skin:', error)
+      alert('Failed to analyze skin. Please try again.')
       setIsProcessing(false)
-      navigate('/results')
-    }, 2000)
+    }
   }
 
   return (
