@@ -5,6 +5,7 @@ import Navigation from './components/Navigation'
 import Hero from './components/Hero'
 import Process from './components/Process'
 import UploadPage from './pages/UploadPage'
+import ResultsPage from './pages/ResultsPage'
 
 function LandingPage() {
   return (
@@ -29,6 +30,7 @@ function App() {
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/upload" element={<UploadPage />} />
+            <Route path="/results" element={<ResultsPage />} />
           </Routes>
         </motion.main>
       </div>

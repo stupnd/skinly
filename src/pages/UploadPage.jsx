@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
-import { Upload as UploadIcon, X, Loader } from 'lucide-react'
+import { Upload as UploadIcon, X, Loader, ArrowRight } from 'lucide-react'
 
 const UploadPage = () => {
   const [image, setImage] = useState(null)
@@ -214,12 +214,11 @@ const UploadPage = () => {
                 ) : (
                   <>
                     <span>Analyze My Skin</span>
-                    <motion.div
-                      animate={{ x: [0, 4, 0] }}
-                      transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-                    >
-                      →
-                    </motion.div>
+                    <ArrowRight 
+                      size={18} 
+                      strokeWidth={1} 
+                      className="transition-transform group-hover:translate-x-1" 
+                    />
                   </>
                 )}
               </motion.button>
