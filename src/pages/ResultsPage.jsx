@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useAuth } from '../context/AuthContext'
+import LoginDrawer from '../components/LoginDrawer'
 import { 
   Sparkles, 
   Circle, 
@@ -11,7 +13,8 @@ import {
   TrendingUp,
   Shield,
   CheckCircle2,
-  XCircle
+  XCircle,
+  Star
 } from 'lucide-react'
 
 // Icon mapping for concerns
@@ -43,8 +46,10 @@ const ResultsPage = () => {
   const location = useLocation()
   const navigate = useNavigate()
   const { analysis, preview } = location.state || {}
+  const { isAuthenticated } = useAuth()
   const [isScanning, setIsScanning] = useState(true)
   const [showResults, setShowResults] = useState(false)
+  const [showLoginDrawer, setShowLoginDrawer] = useState(false)
 
   useEffect(() => {
     if (!preview) {
@@ -344,26 +349,55 @@ const ResultsPage = () => {
               </motion.div>
             )}
 
-            {/* Navigate to Vanity */}
+            {/* Navigate to Vanity and Shade Match / Save Progress */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1.6 }}
-              className="md:col-span-12 flex justify-center pt-4"
+              className="md:col-span-12 flex flex-wrap justify-center gap-4 pt-4"
             >
-              <motion.button
-                onClick={() => navigate('/vanity')}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="glass rounded-full px-8 py-4 text-base font-medium tracking-tight flex items-center gap-3 hover:bg-white/10 transition-colors animate-breathe"
-              >
-                <Sparkles size={18} strokeWidth={1} className="text-purple-400" />
-                <span>View Your Digital Vanity</span>
-              </motion.button>
+              {!isAuthenticated ? (
+                <motion.button
+                  onClick={() => setShowLoginDrawer(true)}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="glass rounded-full px-8 py-4 text-base font-medium tracking-tight flex items-center gap-3 hover:bg-white/10 transition-colors animate-breathe"
+                >
+                  <Sparkles size={18} strokeWidth={1} className="text-purple-400" />
+                  <span>Save Progress</span>
+                </motion.button>
+              ) : (
+                <>
+                  <motion.button
+                    onClick={() => navigate('/vanity')}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="glass rounded-full px-8 py-4 text-base font-medium tracking-tight flex items-center gap-3 hover:bg-white/10 transition-colors animate-breathe"
+                  >
+                    <Sparkles size={18} strokeWidth={1} className="text-purple-400" />
+                    <span>View Your Digital Vanity</span>
+                  </motion.button>
+                  
+                  {analysis.tone && (
+                    <motion.button
+                      onClick={() => navigate('/products')}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      className="glass rounded-full px-8 py-4 text-base font-medium tracking-tight flex items-center gap-3 hover:bg-white/10 transition-colors"
+                    >
+                      <Star size={18} strokeWidth={1} className="text-yellow-400" fill="currentColor" />
+                      <span>Find Your Perfect Shade</span>
+                    </motion.button>
+                  )}
+                </>
+              )}
             </motion.div>
           </motion.div>
         )}
       </motion.div>
+
+      {/* Login Drawer */}
+      <LoginDrawer isOpen={showLoginDrawer} onClose={() => setShowLoginDrawer(false)} />
     </div>
   )
 }

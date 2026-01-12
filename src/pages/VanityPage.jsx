@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
+import { supabase } from '../lib/supabaseClient'
 import { 
   Sparkles, 
   Plus, 
@@ -10,7 +12,8 @@ import {
   Droplets,
   FlaskConical,
   Package,
-  Palette
+  Palette,
+  Loader
 } from 'lucide-react'
 
 // Conflict checker: Maps ingredients to concerns they can worsen
@@ -70,9 +73,12 @@ const checkProductConflicts = (productName, ingredients, concerns) => {
 }
 
 const VanityPage = () => {
+  const navigate = useNavigate()
   const [products, setProducts] = useState([])
   const [concerns, setConcerns] = useState([])
   const [showModal, setShowModal] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState('Cleansers')
   const [formData, setFormData] = useState({
     brand: '',
@@ -83,58 +89,159 @@ const VanityPage = () => {
   })
 
   useEffect(() => {
-    // Load products from localStorage
-    const savedProducts = localStorage.getItem('vanityProducts')
-    if (savedProducts) {
-      setProducts(JSON.parse(savedProducts))
-    }
+    const checkAuthAndFetchProducts = async () => {
+      try {
+        // Check for active session
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+        
+        if (sessionError) {
+          console.error('Error checking session:', sessionError)
+          navigate('/')
+          return
+        }
 
-    // Load concerns from last analysis
-    const savedAnalysis = localStorage.getItem('skinAnalysis')
-    if (savedAnalysis) {
-      const analysis = JSON.parse(savedAnalysis)
-      if (analysis.concerns) {
-        setConcerns(analysis.concerns)
+        if (!session) {
+          // No active session, redirect to login
+          navigate('/')
+          return
+        }
+
+        // Load concerns from last analysis (still using localStorage for now)
+        const savedAnalysis = localStorage.getItem('skinAnalysis')
+        if (savedAnalysis) {
+          const analysis = JSON.parse(savedAnalysis)
+          if (analysis.concerns) {
+            setConcerns(analysis.concerns)
+          }
+        }
+
+        // Fetch products from Supabase
+        const { data, error } = await supabase
+          .from('user_products')
+          .select('*')
+          .eq('user_id', session.user.id)
+          .order('added_date', { ascending: false })
+
+        if (error) {
+          console.error('Error fetching products:', error)
+        } else {
+          // Transform Supabase data to match component format
+          const transformedProducts = data.map(product => ({
+            id: product.id,
+            brand: product.brand,
+            name: product.name,
+            category: product.category,
+            ingredients: product.ingredients || '',
+            expiryDate: product.expiry_date || '',
+            addedDate: product.added_date,
+            conflicts: product.conflicts || []
+          }))
+          setProducts(transformedProducts)
+        }
+      } catch (error) {
+        console.error('Error in checkAuthAndFetchProducts:', error)
+        navigate('/')
+      } finally {
+        setLoading(false)
       }
     }
-  }, [])
 
-  const saveProducts = (newProducts) => {
-    setProducts(newProducts)
-    localStorage.setItem('vanityProducts', JSON.stringify(newProducts))
-  }
+    checkAuthAndFetchProducts()
+  }, [navigate])
 
-  const handleAddProduct = (e) => {
+  const handleAddProduct = async (e) => {
     e.preventDefault()
     
     if (!formData.brand || !formData.name) {
       return
     }
 
-    const newProduct = {
-      id: Date.now().toString(),
-      ...formData,
-      addedDate: new Date().toISOString(),
-      conflicts: checkProductConflicts(formData.name, formData.ingredients, concerns)
-    }
+    setSaving(true)
 
-    const updatedProducts = [...products, newProduct]
-    saveProducts(updatedProducts)
-    
-    // Reset form
-    setFormData({
-      brand: '',
-      name: '',
-      category: 'Cleansers',
-      ingredients: '',
-      expiryDate: ''
-    })
-    setShowModal(false)
+    try {
+      // Get current session
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+      
+      if (sessionError || !session) {
+        console.error('No active session')
+        navigate('/')
+        return
+      }
+
+      // Calculate conflicts
+      const conflicts = checkProductConflicts(formData.name, formData.ingredients, concerns)
+
+      // Insert product into Supabase
+      const { data, error } = await supabase
+        .from('user_products')
+        .insert([
+          {
+            user_id: session.user.id,
+            brand: formData.brand,
+            name: formData.name,
+            category: formData.category,
+            ingredients: formData.ingredients || null,
+            expiry_date: formData.expiryDate || null,
+            conflicts: conflicts,
+            added_date: new Date().toISOString()
+          }
+        ])
+        .select()
+        .single()
+
+      if (error) {
+        console.error('Error adding product:', error)
+        alert('Failed to add product. Please try again.')
+      } else {
+        // Add to local state
+        const newProduct = {
+          id: data.id,
+          brand: data.brand,
+          name: data.name,
+          category: data.category,
+          ingredients: data.ingredients || '',
+          expiryDate: data.expiry_date || '',
+          addedDate: data.added_date,
+          conflicts: data.conflicts || []
+        }
+        setProducts([newProduct, ...products])
+        
+        // Reset form
+        setFormData({
+          brand: '',
+          name: '',
+          category: 'Cleansers',
+          ingredients: '',
+          expiryDate: ''
+        })
+        setShowModal(false)
+      }
+    } catch (error) {
+      console.error('Error in handleAddProduct:', error)
+      alert('Failed to add product. Please try again.')
+    } finally {
+      setSaving(false)
+    }
   }
 
-  const handleDeleteProduct = (id) => {
-    const updatedProducts = products.filter(p => p.id !== id)
-    saveProducts(updatedProducts)
+  const handleDeleteProduct = async (id) => {
+    try {
+      const { error } = await supabase
+        .from('user_products')
+        .delete()
+        .eq('id', id)
+
+      if (error) {
+        console.error('Error deleting product:', error)
+        alert('Failed to delete product. Please try again.')
+      } else {
+        // Remove from local state
+        setProducts(products.filter(p => p.id !== id))
+      }
+    } catch (error) {
+      console.error('Error in handleDeleteProduct:', error)
+      alert('Failed to delete product. Please try again.')
+    }
   }
 
   const getProductsByCategory = (category) => {
@@ -142,6 +249,22 @@ const VanityPage = () => {
   }
 
   const categories = ['Cleansers', 'Serums', 'Moisturizers', 'Makeup']
+
+  // Show loading state while checking auth and fetching products
+  if (loading) {
+    return (
+      <div className="relative min-h-screen flex flex-col items-center justify-center px-6 pt-32 pb-20">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="flex flex-col items-center gap-4"
+        >
+          <Loader size={32} strokeWidth={1} className="text-purple-400 animate-spin" />
+          <p className="text-white/50 font-light">Loading your vanity...</p>
+        </motion.div>
+      </div>
+    )
+  }
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -385,12 +508,24 @@ const VanityPage = () => {
 
                 <motion.button
                   type="submit"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="w-full glass rounded-full px-6 py-3 text-sm font-medium tracking-tight flex items-center justify-center gap-2 hover:bg-white/10 transition-colors animate-breathe"
+                  disabled={saving}
+                  whileHover={!saving ? { scale: 1.02 } : {}}
+                  whileTap={!saving ? { scale: 0.98 } : {}}
+                  className={`w-full glass rounded-full px-6 py-3 text-sm font-medium tracking-tight flex items-center justify-center gap-2 hover:bg-white/10 transition-colors ${
+                    saving ? 'opacity-50 cursor-not-allowed' : 'animate-breathe'
+                  }`}
                 >
-                  <CheckCircle2 size={18} strokeWidth={1} />
-                  <span>Add to Vanity</span>
+                  {saving ? (
+                    <>
+                      <Loader size={18} strokeWidth={1} className="animate-spin text-purple-400" />
+                      <span>Saving...</span>
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 size={18} strokeWidth={1} />
+                      <span>Add to Vanity</span>
+                    </>
+                  )}
                 </motion.button>
               </form>
             </motion.div>
