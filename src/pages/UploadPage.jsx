@@ -223,7 +223,7 @@ const UploadPage = () => {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 20 }}
               transition={{ duration: 0.5 }}
-              className="flex justify-center"
+              className="flex flex-col items-center gap-3"
             >
               <motion.button
                 onClick={handleAnalyze}
@@ -265,6 +265,18 @@ const UploadPage = () => {
                   </>
                 )}
               </motion.button>
+              
+              {/* Loading message */}
+              {isProcessing && (
+                <motion.p
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="text-xs text-white/40 font-light text-center"
+                >
+                  Waking up AI engine... (may take 30 seconds on first load)
+                </motion.p>
+              )}
             </motion.div>
           )}
         </AnimatePresence>
