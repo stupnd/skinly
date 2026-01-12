@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { AuthProvider } from './context/AuthContext'
 import { supabase } from './lib/supabaseClient'
+import ProtectedRoute from './components/ProtectedRoute'
 import Background from './components/Background'
 import Navigation from './components/Navigation'
 import Hero from './components/Hero'
@@ -65,10 +66,32 @@ function App() {
               <Route path="/" element={<LandingPage />} />
               <Route path="/upload" element={<UploadPage />} />
               <Route path="/results" element={<ResultsPage />} />
-              <Route path="/vanity" element={<VanityPage />} />
+              <Route 
+                path="/vanity" 
+                element={
+                  <ProtectedRoute>
+                    <VanityPage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/profile" 
+                element={
+                  <ProtectedRoute>
+                    <Dashboard />
+                  </ProtectedRoute>
+                } 
+              />
               <Route path="/products" element={<Stage5Products />} />
               <Route path="/makeup-discovery" element={<Stage5Products />} />
-              <Route path="/dashboard" element={<Dashboard />} />
+              <Route 
+                path="/dashboard" 
+                element={
+                  <ProtectedRoute>
+                    <Dashboard />
+                  </ProtectedRoute>
+                } 
+              />
             </Routes>
           </motion.main>
 

@@ -61,7 +61,7 @@ const Navigation = () => {
               <div className="h-4 w-px bg-white/20" />
               <div className="flex items-center gap-2">
                 <div className="text-xs font-medium tracking-tight text-white/80">
-                  {user?.name || user?.email?.split('@')[0]}
+                  {user?.user_metadata?.name || user?.email?.split('@')[0] || 'User'}
                 </div>
                 <motion.button
                   onClick={handleLogout}

@@ -85,7 +85,7 @@ const Dashboard = () => {
             <span className="text-gradient">Welcome Back</span>
           </h1>
           <p className="text-lg md:text-xl text-white/50 font-light leading-relaxed">
-            {user?.name || user?.email?.split('@')[0] || 'User'}
+            {user?.user_metadata?.name || user?.email?.split('@')[0] || 'User'}
           </p>
         </motion.div>
 
