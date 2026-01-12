@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { AuthProvider } from './context/AuthContext'
+import { ScanProvider } from './context/ScanContext'
 import { supabase } from './lib/supabaseClient'
 import ProtectedRoute from './components/ProtectedRoute'
 import Background from './components/Background'
@@ -52,66 +53,68 @@ function App() {
 
   return (
     <AuthProvider>
-      <Router>
-        <div className="relative min-h-screen overflow-hidden flex flex-col">
-          <Background />
-          <Navigation />
-          <motion.main
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
-            className="flex-1"
-          >
-            <Routes>
-              <Route path="/" element={<LandingPage />} />
-              <Route path="/upload" element={<UploadPage />} />
-              <Route path="/results" element={<ResultsPage />} />
-              <Route 
-                path="/vanity" 
-                element={
-                  <ProtectedRoute>
-                    <VanityPage />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/profile" 
-                element={
-                  <ProtectedRoute>
-                    <Dashboard />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route path="/products" element={<Stage5Products />} />
-              <Route path="/makeup-discovery" element={<Stage5Products />} />
-              <Route 
-                path="/dashboard" 
-                element={
-                  <ProtectedRoute>
-                    <Dashboard />
-                  </ProtectedRoute>
-                } 
-              />
-            </Routes>
-          </motion.main>
-
-          {/* Footer with System Status */}
-          <footer className="relative z-10 px-6 py-4">
-            <div className="max-w-7xl mx-auto flex items-center justify-end">
-              <div className="flex items-center gap-2 text-xs text-white/40 font-light">
-                <span>System Status</span>
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  className={`w-2 h-2 rounded-full ${
-                    supabaseConnected ? 'bg-green-400' : 'bg-red-400'
-                  }`}
+      <ScanProvider>
+        <Router>
+          <div className="relative min-h-screen overflow-hidden flex flex-col">
+            <Background />
+            <Navigation />
+            <motion.main
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.6, ease: "easeOut" }}
+              className="flex-1"
+            >
+              <Routes>
+                <Route path="/" element={<LandingPage />} />
+                <Route path="/upload" element={<UploadPage />} />
+                <Route path="/results" element={<ResultsPage />} />
+                <Route 
+                  path="/vanity" 
+                  element={
+                    <ProtectedRoute>
+                      <VanityPage />
+                    </ProtectedRoute>
+                  } 
                 />
+                <Route 
+                  path="/profile" 
+                  element={
+                    <ProtectedRoute>
+                      <Dashboard />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route path="/products" element={<Stage5Products />} />
+                <Route path="/makeup-discovery" element={<Stage5Products />} />
+                <Route 
+                  path="/dashboard" 
+                  element={
+                    <ProtectedRoute>
+                      <Dashboard />
+                    </ProtectedRoute>
+                  } 
+                />
+              </Routes>
+            </motion.main>
+
+            {/* Footer with System Status */}
+            <footer className="relative z-10 px-6 py-4">
+              <div className="max-w-7xl mx-auto flex items-center justify-end">
+                <div className="flex items-center gap-2 text-xs text-white/40 font-light">
+                  <span>System Status</span>
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className={`w-2 h-2 rounded-full ${
+                      supabaseConnected ? 'bg-green-400' : 'bg-red-400'
+                    }`}
+                  />
+                </div>
               </div>
-            </div>
-          </footer>
-        </div>
-      </Router>
+            </footer>
+          </div>
+        </Router>
+      </ScanProvider>
     </AuthProvider>
   )
 }

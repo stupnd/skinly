@@ -1,11 +1,13 @@
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { useScan } from '../context/ScanContext'
 import { ArrowRight, LayoutDashboard } from 'lucide-react'
 
 const Hero = () => {
   const navigate = useNavigate()
   const { isAuthenticated } = useAuth()
+  const { hasScan } = useScan()
 
   return (
     <section className="relative min-h-screen flex flex-col items-center justify-center px-6 pt-32 pb-20">
@@ -42,15 +44,26 @@ const Hero = () => {
           className="pt-4"
         >
           <motion.button
-            onClick={() => navigate(isAuthenticated ? '/dashboard' : '/upload')}
+            onClick={() => {
+              if (!isAuthenticated) {
+                navigate('/upload')
+              } else if (hasScan) {
+                navigate('/profile')
+              } else {
+                navigate('/upload')
+              }
+            }}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             className="group relative glass rounded-full px-8 py-4 text-base font-medium tracking-tight flex items-center gap-3 mx-auto transition-colors hover:bg-white/10 animate-breathe"
           >
             <span className="relative z-10">
-              {isAuthenticated ? 'Go to My Dashboard' : 'Begin Analysis'}
+              {isAuthenticated 
+                ? (hasScan ? 'Go to My Dashboard' : 'Begin Analysis')
+                : 'Begin Analysis'
+              }
             </span>
-            {isAuthenticated ? (
+            {isAuthenticated && hasScan ? (
               <LayoutDashboard 
                 size={18} 
                 strokeWidth={1} 

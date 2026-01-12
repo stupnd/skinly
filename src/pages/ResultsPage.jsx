@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '../context/AuthContext'
+import { supabase } from '../lib/supabaseClient'
 import LoginDrawer from '../components/LoginDrawer'
 import { 
   Sparkles, 
@@ -14,7 +15,8 @@ import {
   Shield,
   CheckCircle2,
   XCircle,
-  Star
+  Star,
+  Save
 } from 'lucide-react'
 
 // Icon mapping for concerns
@@ -46,10 +48,12 @@ const ResultsPage = () => {
   const location = useLocation()
   const navigate = useNavigate()
   const { analysis, preview } = location.state || {}
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, user } = useAuth()
   const [isScanning, setIsScanning] = useState(true)
   const [showResults, setShowResults] = useState(false)
   const [showLoginDrawer, setShowLoginDrawer] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [successMessage, setSuccessMessage] = useState('')
 
   useEffect(() => {
     if (!preview) {
@@ -74,6 +78,43 @@ const ResultsPage = () => {
       setIsScanning(true)
     }
   }, [analysis, preview, navigate])
+
+  const handleSaveToProfile = async () => {
+    if (!analysis || !user) return
+
+    setSaving(true)
+    try {
+      // Upsert analysis data to profiles table
+      const { error } = await supabase
+        .from('profiles')
+        .upsert({
+          id: user.id,
+          skin_type: analysis.skinType,
+          analysis_data: analysis,
+          updated_at: new Date().toISOString(),
+        }, {
+          onConflict: 'id'
+        })
+
+      if (error) {
+        console.error('Error saving to profile:', error)
+        alert('Failed to save analysis. Please try again.')
+      } else {
+        // Show success message
+        setSuccessMessage('Analysis saved to your profile!')
+        
+        // Navigate to profile after a brief delay
+        setTimeout(() => {
+          navigate('/profile')
+        }, 1500)
+      }
+    } catch (error) {
+      console.error('Error in handleSaveToProfile:', error)
+      alert('Failed to save analysis. Please try again.')
+    } finally {
+      setSaving(false)
+    }
+  }
 
   // Container variants for staggered animations
   const containerVariants = {
@@ -369,10 +410,35 @@ const ResultsPage = () => {
               ) : (
                 <>
                   <motion.button
+                    onClick={handleSaveToProfile}
+                    disabled={saving}
+                    whileHover={!saving ? { scale: 1.02 } : {}}
+                    whileTap={!saving ? { scale: 0.98 } : {}}
+                    className="glass rounded-full px-8 py-4 text-base font-medium tracking-tight flex items-center gap-3 hover:bg-white/10 transition-colors animate-breathe disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {saving ? (
+                      <>
+                        <motion.div
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                        >
+                          <Sparkles size={18} strokeWidth={1} className="text-purple-400" />
+                        </motion.div>
+                        <span>Saving...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Save size={18} strokeWidth={1} className="text-purple-400" />
+                        <span>Save to Profile</span>
+                      </>
+                    )}
+                  </motion.button>
+                  
+                  <motion.button
                     onClick={() => navigate('/vanity')}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="glass rounded-full px-8 py-4 text-base font-medium tracking-tight flex items-center gap-3 hover:bg-white/10 transition-colors animate-breathe"
+                    className="glass rounded-full px-8 py-4 text-base font-medium tracking-tight flex items-center gap-3 hover:bg-white/10 transition-colors"
                   >
                     <Sparkles size={18} strokeWidth={1} className="text-purple-400" />
                     <span>View Your Digital Vanity</span>
@@ -395,6 +461,23 @@ const ResultsPage = () => {
           </motion.div>
         )}
       </motion.div>
+
+      {/* Success Toast */}
+      <AnimatePresence>
+        {successMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: -10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -10, scale: 0.95 }}
+            className="fixed top-6 right-6 z-[60] glass rounded-2xl p-4 bg-green-500/20 border border-green-500/50 backdrop-blur-xl shadow-2xl max-w-sm"
+          >
+            <div className="flex items-start gap-3">
+              <CheckCircle2 size={20} strokeWidth={1} className="text-green-400 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-green-300 font-light leading-relaxed">{successMessage}</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Login Drawer */}
       <LoginDrawer isOpen={showLoginDrawer} onClose={() => setShowLoginDrawer(false)} />
