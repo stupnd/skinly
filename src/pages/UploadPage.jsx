@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
+import { API_BASE_URL } from '../config'
 import { Upload as UploadIcon, X, Loader, ArrowRight } from 'lucide-react'
 
 const UploadPage = () => {
@@ -74,9 +75,8 @@ const UploadPage = () => {
       // Convert image to base64
       const base64Image = await convertToBase64(image)
       
-      // Send to API (using proxy in dev or direct URL)
-      const apiUrl = import.meta.env.VITE_API_URL || '/api'
-      const response = await fetch(`${apiUrl}/analyze-skin`, {
+      // Send to API
+      const response = await fetch(`${API_BASE_URL}/api/analyze-skin`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
