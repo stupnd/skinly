@@ -6,7 +6,7 @@ import cors from 'cors'
 import { analyzeSkin } from './routes/analyzeSkin.js'
 
 const app = express()
-const port = process.env.PORT || 3001
+const PORT = process.env.PORT || 3001
 
 // Check for OpenAI API key on startup
 if (!process.env.OPENAI_API_KEY) {
@@ -55,8 +55,8 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }))
 
 app.post('/api/analyze-skin', analyzeSkin)
 
-app.listen(port, '0.0.0.0', () => {
-  console.log(`✓ Server active on port ${port}`)
+app.listen(PORT, '0.0.0.0', () => {
+  console.log('Server is running on port', PORT)
   if (process.env.OPENAI_API_KEY) {
     console.log('✓ OpenAI API key configured\n')
   }
